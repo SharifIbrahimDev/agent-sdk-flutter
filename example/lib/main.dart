@@ -1,198 +1,342 @@
-import 'package:agent_sdk/agent_sdk.dart';
 import 'package:flutter/material.dart';
+import 'package:agent_sdk/agent_sdk.dart';
+import 'package:qr_flutter/qr_flutter.dart';
+import 'package:stellar_flutter_sdk/stellar_flutter_sdk.dart' as sdk;
 
 void main() {
   runApp(const AgentSdkExampleApp());
 }
 
 class AgentSdkExampleApp extends StatelessWidget {
-  const AgentSdkExampleApp({super.key});
+  const AgentSdkExampleApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'AgentLabs SDK Demo',
-      debugShowCheckedModeBanner: false,
+      title: 'Agent SDK Example',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF3D5AFE),
-          brightness: Brightness.dark,
-        ),
+        primarySwatch: Colors.blue,
         useMaterial3: true,
-        fontFamily: 'monospace',
       ),
-      home: const WalletDemoPage(),
+      home: const DefaultTabController(
+        length: 4,
+        child: ExampleHomeScreen(),
+      ),
     );
   }
 }
 
-class WalletDemoPage extends StatefulWidget {
-  const WalletDemoPage({super.key});
+class ExampleHomeScreen extends StatelessWidget {
+  const ExampleHomeScreen({Key? key}) : super(key: key);
 
   @override
-  State<WalletDemoPage> createState() => _WalletDemoPageState();
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Agent SDK Example'),
+        bottom: const TabBar(
+          isScrollable: true,
+          tabs: [
+            Tab(text: 'Wallet'),
+            Tab(text: 'Invoice'),
+            Tab(text: 'Scanner'),
+            Tab(text: 'Balances'),
+          ],
+        ),
+      ),
+      body: const TabBarView(
+        children: [
+          WalletTab(),
+          InvoiceTab(),
+          ScannerTab(),
+          BalancesTab(),
+        ],
+      ),
+    );
+  }
 }
 
-class _WalletDemoPageState extends State<WalletDemoPage> {
-  final AgentService _agentService = AgentService();
+class WalletTab extends StatefulWidget {
+  const WalletTab({Key? key}) : super(key: key);
+
+  @override
+  State<WalletTab> createState() => _WalletTabState();
+}
+
+class _WalletTabState extends State<WalletTab> {
   StellarWallet? _wallet;
-  String? _qrUri;
+  final AgentService _agentService = AgentService();
 
   void _generateWallet() {
     setState(() {
       _wallet = _agentService.createAgentWallet(label: 'Demo Agent Wallet');
-      if (_wallet != null) {
-        _qrUri = QRPaymentHelper.generatePaymentRequestURI(
-          destinationAccountId: _wallet!.accountId,
-          amount: '10.0',
-          assetCode: 'XLM',
-          memo: 'Demo Payment',
-        );
-      }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('AgentLabs SDK Demo'),
-        backgroundColor: theme.colorScheme.surface,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _SectionCard(
-              title: '🔐 Wallet Generator',
-              child: Column(
-                children: [
-                  const Text(
-                    'Generate a new Stellar wallet keypair using the AgentLabs SDK.',
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton.icon(
-                    onPressed: _generateWallet,
-                    icon: const Icon(Icons.wallet),
-                    label: const Text('Generate Wallet'),
-                  ),
-                ],
-              ),
-            ),
-            if (_wallet != null) ...[
-              const SizedBox(height: 16),
-              _SectionCard(
-                title: '📋 Wallet Details',
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _KeyValueRow(label: 'Label', value: _wallet!.label ?? '-'),
-                    const Divider(),
-                    _KeyValueRow(
-                      label: 'Account ID',
-                      value: _wallet!.accountId,
-                      monospace: true,
-                    ),
-                    const Divider(),
-                    _KeyValueRow(
-                      label: 'Secret Seed',
-                      value: '${_wallet!.secretSeed.substring(0, 8)}••••••••',
-                      monospace: true,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-              _SectionCard(
-                title: '📱 QR Payment URI',
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('SEP-0007 payment request URI:'),
-                    const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.surfaceContainerHighest,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: SelectableText(
-                        _qrUri ?? '',
-                        style: const TextStyle(fontSize: 11),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ],
-        ),
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ElevatedButton(
+            onPressed: _generateWallet,
+            child: const Text('Generate New Agent Wallet'),
+          ),
+          const SizedBox(height: 24),
+          if (_wallet != null) ...[
+            const Text('Generated Wallet:', style: TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            Text('Label: ${_wallet!.label}'),
+            const SizedBox(height: 8),
+            const Text('Account ID (Public Key):'),
+            SelectableText(_wallet!.accountId),
+            const SizedBox(height: 8),
+            const Text('Secret Seed: (KEEP SAFE)'),
+            SelectableText(_wallet!.secretSeed ?? 'N/A'),
+          ] else ...[
+            const Center(child: Text('Press the button to generate a wallet.')),
+          ]
+        ],
       ),
     );
   }
 }
 
-class _SectionCard extends StatelessWidget {
-  final String title;
-  final Widget child;
-
-  const _SectionCard({required this.title, required this.child});
+class InvoiceTab extends StatefulWidget {
+  const InvoiceTab({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(title, style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 12),
-            child,
-          ],
-        ),
-      ),
-    );
-  }
+  State<InvoiceTab> createState() => _InvoiceTabState();
 }
 
-class _KeyValueRow extends StatelessWidget {
-  final String label;
-  final String value;
-  final bool monospace;
+class _InvoiceTabState extends State<InvoiceTab> {
+  final _accountIdController = TextEditingController();
+  final _amountController = TextEditingController();
+  String? _invoiceUri;
 
-  const _KeyValueRow({
-    required this.label,
-    required this.value,
-    this.monospace = false,
-  });
+  @override
+  void dispose() {
+    _accountIdController.dispose();
+    _amountController.dispose();
+    super.dispose();
+  }
+
+  void _generateInvoice() {
+    if (_accountIdController.text.isEmpty || _amountController.text.isEmpty) return;
+    
+    final uri = QRPaymentHelper.generatePaymentRequestURI(
+      destinationAccountId: _accountIdController.text,
+      amount: _amountController.text,
+      assetCode: 'XLM',
+    );
+    
+    setState(() {
+      _invoiceUri = uri;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      padding: const EdgeInsets.all(16.0),
+      child: ListView(
         children: [
-          SizedBox(
-            width: 90,
-            child: Text(
-              label,
-              style: Theme.of(context).textTheme.labelMedium,
-            ),
+          TextField(
+            controller: _accountIdController,
+            decoration: const InputDecoration(labelText: 'Destination Account ID (G...)'),
           ),
-          Expanded(
-            child: SelectableText(
-              value,
-              style: TextStyle(
-                fontFamily: monospace ? 'monospace' : null,
-                fontSize: 12,
+          TextField(
+            controller: _amountController,
+            decoration: const InputDecoration(labelText: 'Amount (XLM)'),
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: _generateInvoice,
+            child: const Text('Generate Invoice QR'),
+          ),
+          const SizedBox(height: 24),
+          if (_invoiceUri != null) ...[
+            const Text('Payment Request URI:', style: TextStyle(fontWeight: FontWeight.bold)),
+            SelectableText(_invoiceUri!),
+            const SizedBox(height: 16),
+            Center(
+              child: QrImageView(
+                data: _invoiceUri!,
+                version: QrVersions.auto,
+                size: 200.0,
               ),
             ),
+          ]
+        ],
+      ),
+    );
+  }
+}
+
+class ScannerTab extends StatefulWidget {
+  const ScannerTab({Key? key}) : super(key: key);
+
+  @override
+  State<ScannerTab> createState() => _ScannerTabState();
+}
+
+class _ScannerTabState extends State<ScannerTab> {
+  final _uriController = TextEditingController();
+  Map<String, String>? _parsedData;
+  String? _error;
+
+  @override
+  void dispose() {
+    _uriController.dispose();
+    super.dispose();
+  }
+
+  void _parseUri() {
+    setState(() {
+      _parsedData = null;
+      _error = null;
+    });
+    
+    try {
+      final parsed = QRPaymentHelper.parsePaymentRequestURI(_uriController.text);
+      setState(() {
+        _parsedData = parsed;
+      });
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Text('Paste a web+stellar:pay URI here to simulate scanning a QR code:'),
+          const SizedBox(height: 8),
+          TextField(
+            controller: _uriController,
+            decoration: const InputDecoration(
+              hintText: 'web+stellar:pay?destination=...',
+              border: OutlineInputBorder(),
+            ),
+            maxLines: 3,
           ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: _parseUri,
+            child: const Text('Parse URI'),
+          ),
+          const SizedBox(height: 24),
+          if (_error != null)
+            Text('Error: $_error', style: const TextStyle(color: Colors.red)),
+          if (_parsedData != null) ...[
+            const Text('Parsed Data:', style: TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            Expanded(
+              child: ListView(
+                children: _parsedData!.entries.map((e) {
+                  return ListTile(
+                    title: Text(e.key),
+                    subtitle: Text(e.value),
+                  );
+                }).toList(),
+              ),
+            )
+          ]
+        ],
+      ),
+    );
+  }
+}
+
+class BalancesTab extends StatefulWidget {
+  const BalancesTab({Key? key}) : super(key: key);
+
+  @override
+  State<BalancesTab> createState() => _BalancesTabState();
+}
+
+class _BalancesTabState extends State<BalancesTab> {
+  final _accountIdController = TextEditingController();
+  final WalletService _walletService = WalletService();
+  List<sdk.Balance>? _balances;
+  bool _loading = false;
+  String? _error;
+
+  @override
+  void dispose() {
+    _accountIdController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _fetchBalances() async {
+    if (_accountIdController.text.isEmpty) return;
+    
+    setState(() {
+      _loading = true;
+      _error = null;
+      _balances = null;
+    });
+
+    try {
+      final balances = await _walletService.getBalances(_accountIdController.text);
+      setState(() {
+        _balances = balances;
+      });
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+      });
+    } finally {
+      setState(() {
+        _loading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          TextField(
+            controller: _accountIdController,
+            decoration: const InputDecoration(labelText: 'Account ID (G...)'),
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: _loading ? null : _fetchBalances,
+            child: _loading 
+                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                : const Text('Fetch Balances (Testnet)'),
+          ),
+          const SizedBox(height: 24),
+          if (_error != null)
+            Text('Error: $_error', style: const TextStyle(color: Colors.red)),
+          if (_balances != null) ...[
+            const Text('Balances:', style: TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            Expanded(
+              child: ListView(
+                children: _balances!.map((b) {
+                  return ListTile(
+                    title: Text(b.assetType == sdk.Asset.TYPE_NATIVE ? 'XLM' : b.assetCode ?? 'Unknown'),
+                    subtitle: Text('Balance: ${b.balance}'),
+                  );
+                }).toList(),
+              ),
+            )
+          ]
         ],
       ),
     );
