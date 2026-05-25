@@ -288,7 +288,7 @@ packages:
     source: hosted
     version: "1.12.1"
   stellar_flutter_sdk:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: stellar_flutter_sdk
       sha256: "196913fc8b08510f0f994ab8194306a3166dd217d1f45644406578c0d4bda618"

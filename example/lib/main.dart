@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:agent_sdk/agent_sdk.dart';
+import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:stellar_flutter_sdk/stellar_flutter_sdk.dart' as sdk;
 
@@ -8,7 +8,7 @@ void main() {
 }
 
 class AgentSdkExampleApp extends StatelessWidget {
-  const AgentSdkExampleApp({Key? key}) : super(key: key);
+  const AgentSdkExampleApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +27,7 @@ class AgentSdkExampleApp extends StatelessWidget {
 }
 
 class ExampleHomeScreen extends StatelessWidget {
-  const ExampleHomeScreen({Key? key}) : super(key: key);
+  const ExampleHomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -57,7 +57,7 @@ class ExampleHomeScreen extends StatelessWidget {
 }
 
 class WalletTab extends StatefulWidget {
-  const WalletTab({Key? key}) : super(key: key);
+  const WalletTab({super.key});
 
   @override
   State<WalletTab> createState() => _WalletTabState();
@@ -94,7 +94,7 @@ class _WalletTabState extends State<WalletTab> {
             SelectableText(_wallet!.accountId),
             const SizedBox(height: 8),
             const Text('Secret Seed: (KEEP SAFE)'),
-            SelectableText(_wallet!.secretSeed ?? 'N/A'),
+            SelectableText(_wallet!.secretSeed),
           ] else ...[
             const Center(child: Text('Press the button to generate a wallet.')),
           ]
@@ -105,7 +105,7 @@ class _WalletTabState extends State<WalletTab> {
 }
 
 class InvoiceTab extends StatefulWidget {
-  const InvoiceTab({Key? key}) : super(key: key);
+  const InvoiceTab({super.key});
 
   @override
   State<InvoiceTab> createState() => _InvoiceTabState();
@@ -177,7 +177,7 @@ class _InvoiceTabState extends State<InvoiceTab> {
 }
 
 class ScannerTab extends StatefulWidget {
-  const ScannerTab({Key? key}) : super(key: key);
+  const ScannerTab({super.key});
 
   @override
   State<ScannerTab> createState() => _ScannerTabState();
@@ -258,7 +258,7 @@ class _ScannerTabState extends State<ScannerTab> {
 }
 
 class BalancesTab extends StatefulWidget {
-  const BalancesTab({Key? key}) : super(key: key);
+  const BalancesTab({super.key});
 
   @override
   State<BalancesTab> createState() => _BalancesTabState();
